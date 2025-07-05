@@ -96,9 +96,12 @@
 }
 
 @layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
   body {
-    @apply font-body text-black bg-background text-foreground; /* Default text color */
-    /* Ensure no conflicting background styles here */
+    @apply font-sans bg-amber-50 text-amber-900 antialiased;
   }
 
   h1,
@@ -108,6 +111,13 @@
   h5,
   h6 {
     @apply font-heading;
+  }
+
+  /* Images scale nicely inside prose / cards */
+  img,
+  video,
+  svg {
+    @apply max-w-full h-auto;
   }
 }
 

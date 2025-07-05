@@ -1,60 +1,50 @@
-import { getHorseFactById } from "@/lib/horse-facts"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+
+import { getHorseFactById } from "@/lib/horse-facts"
 import HorseFactClientPage from "./HorseFactClientPage"
 
-interface PageProps {
-  params: {
-    factId: string
-  }
+type Props = {
+  params: { factId: string }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const factId = Number.parseInt(params.factId)
-  const horseFact = getHorseFactById(factId)
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const factId = Number(params.factId)
+  const fact = getHorseFactById(factId)
 
-  if (!horseFact) {
+  if (!fact) {
     return {
       title: "Horse Fact Not Found",
       description: "The requested horse fact could not be found.",
     }
   }
 
-  const baseUrl = "https://v0-powerpuff-girls-9j.vercel.app"
-  const ogImageUrl = `${baseUrl}/api/generate-og-image?factId=${factId}&factImage=${encodeURIComponent(horseFact.image)}`
+  const baseUrl = process.env.NEXT_PUBLIC_URL || "https://v0-powerpuff-girls-9j.vercel.app"
+  const og = `${baseUrl}/api/generate-og-image?factId=${fact.id}&factImage=${encodeURIComponent(fact.image)}`
 
   return {
-    title: `${horseFact.title} | Horse Facts & Pics`,
-    description: horseFact.fact,
+    title: `${fact.title} | Horse Facts & Pics`,
+    description: fact.fact,
     openGraph: {
-      title: horseFact.title,
-      description: horseFact.fact,
-      images: [
-        {
-          url: ogImageUrl,
-          width: 1200,
-          height: 630,
-          alt: horseFact.title,
-        },
-      ],
+      title: fact.title,
+      description: fact.fact,
+      images: [{ url: og, width: 1200, height: 630, alt: fact.title }],
       type: "article",
     },
     twitter: {
       card: "summary_large_image",
-      title: horseFact.title,
-      description: horseFact.fact,
-      images: [ogImageUrl],
+      title: fact.title,
+      description: fact.fact,
+      images: [og],
     },
   }
 }
 
-export default function HorseFactPage({ params }: PageProps) {
-  const factId = Number.parseInt(params.factId)
-  const horseFact = getHorseFactById(factId)
+export default function HorseFactPage({ params }: Props) {
+  const factId = Number(params.factId)
+  const fact = getHorseFactById(factId)
 
-  if (!horseFact) {
-    notFound()
-  }
+  if (!fact) notFound()
 
   return <HorseFactClientPage params={params} />
 }

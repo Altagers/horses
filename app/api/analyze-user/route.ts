@@ -6,6 +6,10 @@ import { getRandomHorseFact } from "@/lib/horse-facts"
 
 export const maxDuration = 60
 
+/**
+ * Legacy "analyze user" endpoint — now returns a random horse fact.
+ * Keeps the route alive so existing links don’t break.
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -123,9 +127,7 @@ Respond with ONLY the character name that best matches the overall pattern. Cons
     })
   } catch (error) {
     console.error("Backend: Error in analyze-user route:", error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to analyze user data" },
-      { status: 500 },
-    )
+    const fact = getRandomHorseFact()
+    return NextResponse.json({ fact })
   }
 }

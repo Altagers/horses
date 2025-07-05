@@ -6,6 +6,7 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./lib/**/*.{ts}",
     "*.{js,ts,jsx,tsx,mdx}",
   ],
   prefix: "",
@@ -19,7 +20,7 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         body: ["Inter", "system-ui", "sans-serif"],
         heading: ["Inter", "system-ui", "sans-serif"],
       },
@@ -63,6 +64,16 @@ const config: Config = {
           tan: "#D2691E",
           sand: "#F4A460",
           cream: "#F5F5DC",
+          50: "#FFFAF0",
+          100: "#FDEBC8",
+          200: "#F5D7A3",
+          300: "#E9C07B",
+          400: "#D9A552",
+          500: "#C48A39",
+          600: "#A76E2B",
+          700: "#87521E",
+          800: "#653814",
+          900: "#42240B",
         },
       },
       borderRadius: {
@@ -91,7 +102,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 } satisfies Config
 
 export default config
