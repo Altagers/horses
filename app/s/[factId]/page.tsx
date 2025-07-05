@@ -20,9 +20,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_URL || "https://v0-powerpuff-girls-9j.vercel.app"
-  const og = `${baseUrl}/api/generate-og-image?factId=${fact.id}&factImage=${encodeURIComponent(fact.image)}&v=${Date.now()}`
+  // Добавляем timestamp для уникальности каждого изображения
+  const timestamp = Date.now()
+  const ogImageUrl = `${baseUrl}/api/generate-og-image?factId=${fact.id}&factImage=${encodeURIComponent(fact.image)}&t=${timestamp}`
 
-  console.log("Generating metadata for fact:", fact.id, "OG URL:", og)
+  console.log("Generating metadata for fact:", fact.id, "OG URL:", ogImageUrl)
 
   return {
     title: `${fact.title} | Horse Facts & Pics`,
@@ -30,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: fact.title,
       description: fact.fact,
-      images: [{ url: og, width: 1200, height: 630, alt: fact.title }],
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: fact.title }],
       type: "article",
       url: `${baseUrl}/s/${fact.id}`,
     },
@@ -38,12 +40,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: fact.title,
       description: fact.fact,
-      images: [og],
+      images: [ogImageUrl],
     },
-    // Используем стандартные метатеги вместо other
-    metadataBase: new URL(baseUrl),
-    alternates: {
-      canonical: `${baseUrl}/s/${fact.id}`,
+    other: {
+      // Farcaster Frame метатеги
+      "fc:frame": "vNext",
+      "fc:frame:image": ogImageUrl,
+      "fc:frame:image:aspect_ratio": "1.91:1",
+      "fc:frame:button:1": `🐴 Open Horse Facts App`,
+      "fc:frame:button:1:action": "launch_frame",
+      "fc:frame:button:1:target": JSON.stringify({
+        type: "launch_frame",
+        name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Horse Facts & Pics",
+        url: baseUrl,
+        splashImageUrl: `${baseUrl}/splash.png`,
+        splashBackgroundColor: "#8B4513",
+      }),
     },
   }
 }

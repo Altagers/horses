@@ -9,12 +9,13 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const factId = searchParams.get("factId")
     const factImagePublicPath = searchParams.get("factImage")
+    const timestamp = searchParams.get("t") // Для уникальности
 
     console.log("OG Image Generation Request:", {
       factId,
       factImagePublicPath,
+      timestamp,
       url: req.url,
-      headers: Object.fromEntries(req.headers.entries()),
     })
 
     if (!factId || !factImagePublicPath) {
@@ -35,9 +36,10 @@ export async function GET(req: NextRequest) {
       factId: horseFact.id,
       title: horseFact.title,
       imageUrl: factImageUrl,
+      timestamp,
     })
 
-    return new ImageResponse(
+    const response = new ImageResponse(
       <div
         style={{
           height: "100%",
@@ -50,8 +52,26 @@ export async function GET(req: NextRequest) {
           padding: "40px",
           border: "8px solid #D2691E",
           borderRadius: "24px",
+          position: "relative",
         }}
       >
+        {/* Уникальный элемент для каждого факта */}
+        <div
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            backgroundColor: "#D2691E",
+            color: "white",
+            padding: "8px 16px",
+            borderRadius: "20px",
+            fontSize: "18px",
+            fontWeight: "bold",
+          }}
+        >
+          Fact #{horseFact.id}
+        </div>
+
         <img
           src={factImageUrl || "/placeholder.svg"}
           width={400}
@@ -64,6 +84,7 @@ export async function GET(req: NextRequest) {
           }}
           alt={horseFact.title}
         />
+
         <h1
           style={{
             fontSize: "48px",
@@ -77,6 +98,7 @@ export async function GET(req: NextRequest) {
         >
           🐴 {horseFact.title}
         </h1>
+
         <p
           style={{
             fontSize: "24px",
@@ -89,28 +111,34 @@ export async function GET(req: NextRequest) {
         >
           {horseFact.fact.length > 120 ? horseFact.fact.substring(0, 120) + "..." : horseFact.fact}
         </p>
+
         <div
           style={{
             position: "absolute",
-            bottom: "10px",
-            right: "10px",
+            bottom: "20px",
+            left: "20px",
+            right: "20px",
+            textAlign: "center",
             fontSize: "16px",
-            color: "rgba(255,255,255,0.5)",
+            color: "rgba(255,255,255,0.8)",
           }}
         >
-          Fact #{horseFact.id} • Horse Facts & Pics
+          Horse Facts & Pics • {timestamp ? new Date(Number(timestamp)).toLocaleString() : "Now"}
         </div>
       </div>,
       {
         width: 1200,
         height: 630,
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
       },
     )
+
+    // Добавляем заголовки для предотвращения кэширования
+    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate")
+    response.headers.set("Pragma", "no-cache")
+    response.headers.set("Expires", "0")
+    response.headers.set("Vary", "*")
+
+    return response
   } catch (e: any) {
     console.error(`OG Image Error:`, e)
     return new Response(`Failed to generate image: ${e.message}`, { status: 500 })
