@@ -10,9 +10,12 @@ export async function GET(req: NextRequest) {
     const factId = searchParams.get("factId")
     const factImagePublicPath = searchParams.get("factImage")
 
-    const baseUrl = "https://v0-powerpuff-girls-9j.vercel.app"
-
-    console.log("OG Image Generation:", { factId, factImagePublicPath, url: req.url })
+    console.log("OG Image Generation Request:", {
+      factId,
+      factImagePublicPath,
+      url: req.url,
+      headers: Object.fromEntries(req.headers.entries()),
+    })
 
     if (!factId || !factImagePublicPath) {
       console.error("Missing parameters:", { factId, factImagePublicPath })
@@ -25,12 +28,16 @@ export async function GET(req: NextRequest) {
       return new Response("Horse fact not found", { status: 404 })
     }
 
-    // Создаем полный URL для изображения лошади
+    const baseUrl = "https://v0-powerpuff-girls-9j.vercel.app"
     const factImageUrl = `${baseUrl}${factImagePublicPath}`
-    console.log("Generated image URL:", factImageUrl)
 
-    // Добавляем заголовки для предотвращения кэширования
-    const response = new ImageResponse(
+    console.log("Generating OG image for:", {
+      factId: horseFact.id,
+      title: horseFact.title,
+      imageUrl: factImageUrl,
+    })
+
+    return new ImageResponse(
       <div
         style={{
           height: "100%",
@@ -82,7 +89,6 @@ export async function GET(req: NextRequest) {
         >
           {horseFact.fact.length > 120 ? horseFact.fact.substring(0, 120) + "..." : horseFact.fact}
         </p>
-        {/* Добавляем уникальный элемент для каждого факта */}
         <div
           style={{
             position: "absolute",
@@ -92,7 +98,7 @@ export async function GET(req: NextRequest) {
             color: "rgba(255,255,255,0.5)",
           }}
         >
-          #{horseFact.id}
+          Fact #{horseFact.id} • Horse Facts & Pics
         </div>
       </div>,
       {
@@ -105,15 +111,8 @@ export async function GET(req: NextRequest) {
         },
       },
     )
-
-    // Добавляем заголовки к ответу
-    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate")
-    response.headers.set("Pragma", "no-cache")
-    response.headers.set("Expires", "0")
-
-    return response
   } catch (e: any) {
-    console.error(`OG Image Error: Failed to generate ImageResponse:`, e.message)
+    console.error(`OG Image Error:`, e)
     return new Response(`Failed to generate image: ${e.message}`, { status: 500 })
   }
 }
