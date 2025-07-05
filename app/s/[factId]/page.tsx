@@ -20,20 +20,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_URL || "https://v0-powerpuff-girls-9j.vercel.app"
-  // Добавляем timestamp для предотвращения кэширования
-  const timestamp = Date.now()
-  const og = `${baseUrl}/api/generate-og-image?factId=${fact.id}&factImage=${encodeURIComponent(fact.image)}&t=${timestamp}`
+  // Добавляем уникальный параметр для каждого факта
+  const og = `${baseUrl}/api/generate-og-image?factId=${fact.id}&factImage=${encodeURIComponent(fact.image)}&v=2`
 
   console.log("Generating metadata for fact:", fact.id, "OG URL:", og)
 
   return {
     title: `${fact.title} | Horse Facts & Pics`,
     description: fact.fact,
+    // Полностью перекрываем все метадата из layout
     openGraph: {
       title: fact.title,
       description: fact.fact,
       images: [{ url: og, width: 1200, height: 630, alt: fact.title }],
       type: "article",
+      url: `${baseUrl}/s/${fact.id}`,
     },
     twitter: {
       card: "summary_large_image",
@@ -42,6 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [og],
     },
     other: {
+      // Полностью перекрываем fc:frame из layout
       "fc:frame": JSON.stringify({
         version: "next",
         imageUrl: og,
@@ -55,6 +57,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             splashBackgroundColor: "#8B4513",
           },
         },
+      }),
+      // Добавляем дополнительные метатеги для принудительного обновления
+      "fc:frame:image": og,
+      "fc:frame:button:1": `🐴 ${fact.title} - Open Horse Facts!`,
+      "fc:frame:button:1:action": "launch_frame",
+      "fc:frame:button:1:target": JSON.stringify({
+        type: "launch_frame",
+        name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Horse Facts & Pics",
+        url: baseUrl,
+        splashImageUrl: `${baseUrl}/splash.png`,
+        splashBackgroundColor: "#8B4513",
       }),
     },
   }
