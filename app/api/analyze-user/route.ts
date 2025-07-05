@@ -1,133 +1,113 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
-import { characters } from "@/lib/characters" // Ensure this path is correct
-import { getRandomHorseFact } from "@/lib/horse-facts"
+import { getHorseFactById } from "@/lib/horse-facts"
+import { analyzePostsForHorseFacts, getAnalysisDetails } from "@/lib/horse-keyword-analyzer"
 
 export const maxDuration = 60
 
 /**
- * Legacy "analyze user" endpoint — now returns a random horse fact.
- * Keeps the route alive so existing links don’t break.
+ * Horse Facts API - анализирует посты пользователя и возвращает подходящий факт о лошадях
+ * Использует внутренний механизм анализа ключевых слов вместо OpenAI
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const fid = body.fid // Get FID from request body
+    const fid = body.fid
 
     if (!fid) {
       return NextResponse.json({ error: "FID is required" }, { status: 400 })
     }
 
-    console.log(`Backend: Received request to analyze FID: ${fid}`) // Log the FID being queried
+    console.log(`Backend: Received request for horse fact analysis from FID: ${fid}`)
 
-    // Simulate analysis delay
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    // Симулируем задержку анализа для лучшего UX
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    // 1. Fetch user casts from Neynar API
-    if (!process.env.NEYNAR_API_KEY) {
-      throw new Error("Neynar API key not configured")
-    }
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error("OpenAI API key not configured")
-    }
+    let analysisResult
+    let horseFact
+    let debugInfo = null
 
-    console.log(`Backend: Querying Neynar API for FID: ${fid}`) // Log before Neynar call
+    // Пытаемся получить посты пользователя из Neynar API
+    if (process.env.NEYNAR_API_KEY) {
+      try {
+        console.log(`Backend: Fetching posts from Neynar API for FID: ${fid}`)
 
-    const neynarResponse = await fetch(`https://api.neynar.com/v2/farcaster/feed/user/popular?fid=${fid}&limit=10`, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        api_key: process.env.NEYNAR_API_KEY,
-      },
-    })
+        const neynarResponse = await fetch(
+          `https://api.neynar.com/v2/farcaster/feed/user/popular?fid=${fid}&limit=20`,
+          {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+              api_key: process.env.NEYNAR_API_KEY,
+            },
+          },
+        )
 
-    if (!neynarResponse.ok) {
-      const errorText = await neynarResponse.text()
-      console.error(`Backend: Neynar API error for FID ${fid}: ${errorText}`)
-      throw new Error(`Neynar API error: ${neynarResponse.status} - ${errorText}`)
-    }
+        if (neynarResponse.ok) {
+          const neynarData = await neynarResponse.json()
+          const castTexts = neynarData.casts?.map((cast: any) => cast.text).filter(Boolean) || []
 
-    const neynarData = await neynarResponse.json()
-    const castTexts = neynarData.casts?.map((cast: any) => cast.text).filter(Boolean) || []
+          console.log(`Backend: Found ${castTexts.length} posts for FID ${fid}`)
 
-    if (castTexts.length === 0) {
-      console.log(`Backend: No casts found for FID ${fid}. Defaulting to Bubbles.`)
-      // If no casts, default to Bubbles (or handle as preferred)
-      const horseFact = getRandomHorseFact()
-      console.log(`Backend: Returning horse fact ${horseFact.id} for FID ${fid}`)
-      return NextResponse.json({ character: characters.bubbles, horseFact, success: true })
-    }
+          if (castTexts.length > 0) {
+            // Анализируем посты с помощью нашего внутреннего механизма
+            const detailedAnalysis = getAnalysisDetails(castTexts)
+            analysisResult = detailedAnalysis.analysis
+            debugInfo = detailedAnalysis.debugInfo
 
-    // 2. Prepare the prompt and call OpenAI API
-    const allPosts = castTexts.join("\n---\n")
-    console.log(`Backend: Sending ${castTexts.length} cast(s) to OpenAI for FID ${fid}.`)
-
-    const { text: characterName } = await generateText({
-      model: openai("gpt-4o-mini"),
-      system: `You are a personality analyzer for PowerPuff Girls characters. Analyze the user's posts and determine which character they match best. Be specific and look for distinct patterns:
-
-BUBBLES - The Joy Spreader:
-- Uses lots of positive language, emojis, exclamation points
-- Shares wholesome content, compliments others frequently
-- Posts about cute things, animals, friendship, love
-- Optimistic even about challenges, sees good in everything
-- Language: "amazing!", "so cute!", "love this!", "wholesome", "sweet"
-
-BLOSSOM - The Strategic Leader:
-- Shares informative content, explains complex topics
-- Takes charge in conversations, offers solutions
-- Posts about planning, organization, learning, teaching
-- Uses structured thinking, bullet points, step-by-step approaches
-- Language: "strategy", "plan", "analyze", "solution", "research", "data"
-
-BUTTERCUP - The Rebel Fighter:
-- Direct, blunt communication style
-- Challenges popular opinions, calls out problems
-- Posts about injustice, fighting for causes, being authentic
-- Uses strong language, doesn't sugarcoat things
-- Language: "fight", "real talk", "honestly", "enough", "stand up", sarcasm
-
-MOJO JOJO - The Mastermind:
-- Complex, elaborate posts with sophisticated vocabulary
-- Shares grand theories, ambitious projects, intellectual pursuits
-- Posts about power, influence, complex schemes or ideas
-- Verbose, dramatic language, talks about "plans" and "domination"
-- Language: "brilliant", "scheme", "dominate", "superior", "elaborate", "mastermind"
-
-Respond with ONLY the character name that best matches the overall pattern. Consider the dominant themes, not just individual posts.`,
-      prompt: `Analyze these social media posts and determine which PowerPuff Girls character this person is most like:\n\n${allPosts}`,
-      maxTokens: 15,
-      temperature: 0.4, // Increased from 0.2 for more variety
-    })
-
-    console.log(`Backend: OpenAI response for FID ${fid}: ${characterName}`)
-
-    // 3. Map the OpenAI response to our character data
-    const normalizedCharacterName = characterName.trim().toLowerCase()
-    const matchedCharacter = characters[normalizedCharacterName]
-
-    if (!matchedCharacter) {
-      console.error(
-        `Backend: OpenAI returned an unknown character for FID ${fid}: '${characterName}'. Defaulting to Bubbles.`,
-      )
-      // Fallback if OpenAI returns an unexpected value
-      const horseFact = getRandomHorseFact()
-      console.log(`Backend: Returning horse fact ${horseFact.id} for FID ${fid}`)
-      return NextResponse.json({ character: characters.bubbles, horseFact, success: true }) // Default to Bubbles
+            console.log(`Backend: Analysis result for FID ${fid}:`, {
+              selectedFactId: analysisResult.selectedFactId,
+              matchedCategories: analysisResult.matchedCategories,
+              confidence: analysisResult.confidence,
+            })
+          }
+        } else {
+          console.warn(`Backend: Neynar API error for FID ${fid}: ${neynarResponse.status}`)
+        }
+      } catch (neynarError) {
+        console.error(`Backend: Error fetching from Neynar for FID ${fid}:`, neynarError)
+      }
     }
 
-    console.log(`Backend: Matched character for FID ${fid}: ${matchedCharacter.name}`)
-    const horseFact = getRandomHorseFact()
-    console.log(`Backend: Returning horse fact ${horseFact.id} for FID ${fid}`)
+    // Если не удалось получить посты или проанализировать, используем случайный факт
+    if (!analysisResult) {
+      console.log(`Backend: Using fallback random fact for FID ${fid}`)
+      analysisResult = analyzePostsForHorseFacts([]) // Пустой массив вернет случайный факт
+    }
+
+    // Получаем факт по ID
+    horseFact = getHorseFactById(analysisResult.selectedFactId)
+
+    if (!horseFact) {
+      console.error(`Backend: Horse fact with ID ${analysisResult.selectedFactId} not found`)
+      // Fallback к первому факту
+      horseFact = getHorseFactById(1)
+    }
+
+    console.log(`Backend: Returning horse fact ${horseFact?.id} for FID ${fid}`)
+
     return NextResponse.json({
-      character: matchedCharacter,
       horseFact,
+      analysis: {
+        selectedFactId: analysisResult.selectedFactId,
+        matchedCategories: analysisResult.matchedCategories,
+        confidence: analysisResult.confidence,
+        keywordMatches: analysisResult.keywordMatches,
+      },
+      debugInfo: process.env.NODE_ENV === "development" ? debugInfo : undefined,
       success: true,
     })
   } catch (error) {
-    console.error("Backend: Error in analyze-user route:", error)
-    const fact = getRandomHorseFact()
-    return NextResponse.json({ fact })
+    console.error("Backend: Error in horse facts analysis route:", error)
+
+    // Fallback к случайному факту даже при ошибке
+    const fallbackAnalysis = analyzePostsForHorseFacts([])
+    const horseFact = getHorseFactById(fallbackAnalysis.selectedFactId) || getHorseFactById(1)
+
+    return NextResponse.json({
+      horseFact,
+      analysis: fallbackAnalysis,
+      success: true,
+      error: "Analysis failed, returned random fact",
+    })
   }
 }

@@ -3,12 +3,12 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useMiniKit } from "@coinbase/onchainkit/minikit"
-import { getRandomHorseFact, type HorseFact } from "@/lib/horse-facts"
+import type { HorseFact } from "@/lib/horse-facts"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ShareResultButton } from "./share-result-button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Sparkles, RefreshCw } from "lucide-react"
+import { Brain, Target } from "lucide-react"
 
 const HorseFactsHeaderImage = () => (
   <div className="flex justify-center mb-6">
@@ -20,6 +20,12 @@ const HorseFactsHeaderImage = () => (
 
 type AnalysisResult = {
   horseFact: HorseFact
+  analysis?: {
+    selectedFactId: number
+    matchedCategories: string[]
+    confidence: number
+    keywordMatches: { [category: string]: string[] }
+  }
 }
 
 export default function HorseFactsAnalyzer() {
@@ -34,7 +40,7 @@ export default function HorseFactsAnalyzer() {
     const userFid = context?.user?.fid
 
     if (!userFid) {
-      setError("Please connect your Farcaster account to discover horse facts.")
+      setError("Please connect your Farcaster account to get personalized horse facts.")
       setLoading(false)
       setResult(null)
       return
@@ -45,16 +51,43 @@ export default function HorseFactsAnalyzer() {
     setResult(null)
 
     try {
-      // Simulate analysis with a random horse fact
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      const randomFact = getRandomHorseFact()
-      setPreviewId(randomFact.id)
-      // After 1 s navigate to shareable page
-      setTimeout(() => {
-        router.push(`/s/${randomFact.id}`)
-      }, 1000)
+      console.log("Frontend: Starting analysis for FID:", userFid)
+
+      // Вызываем наш API для анализа
+      const response = await fetch("/api/analyze-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fid: userFid }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Analysis failed: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log("Frontend: Analysis response:", data)
+
+      if (data.success && data.horseFact) {
+        const analysisResult: AnalysisResult = {
+          horseFact: data.horseFact,
+          analysis: data.analysis,
+        }
+
+        setResult(analysisResult)
+        setPreviewId(data.horseFact.id)
+
+        // Через 2 секунды переходим на страницу с результатом
+        setTimeout(() => {
+          router.push(`/s/${data.horseFact.id}`)
+        }, 2000)
+      } else {
+        throw new Error("Invalid response from analysis API")
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred")
+      console.error("Frontend: Analysis error:", err)
+      setError(err instanceof Error ? err.message : "Analysis failed. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -71,11 +104,12 @@ export default function HorseFactsAnalyzer() {
       <HorseFactsHeaderImage />
       <Card className="bg-white/95 backdrop-blur-sm border-2 border-amber-200 shadow-2xl">
         <CardContent className="p-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-amber-900 mb-6 leading-tight">
-            Discover Amazing
+          <h1 className="text-3xl md:text-4xl font-bold text-amber-900 mb-4 leading-tight">
+            Get Your Personal
             <br />
-            Horse Facts!
+            Horse Fact!
           </h1>
+          <p className="text-amber-700 mb-6 text-sm">We'll analyze your posts to find the perfect horse fact for you</p>
           <Button
             onClick={handleAnalyze}
             disabled={loading || !context?.user?.fid}
@@ -83,15 +117,15 @@ export default function HorseFactsAnalyzer() {
           >
             {loading ? (
               <>
-                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                Discovering...
+                <Brain className="w-5 h-5 mr-2 animate-pulse" />
+                Analyzing Your Posts...
               </>
             ) : !context?.user?.fid ? (
-              "Connect Wallet to Discover"
+              "Connect Wallet to Start"
             ) : (
               <>
-                <Sparkles className="w-5 h-5 mr-2" />
-                Discover Horse Facts!
+                <Target className="w-5 h-5 mr-2" />
+                Analyze My Posts!
               </>
             )}
           </Button>
@@ -114,7 +148,7 @@ export default function HorseFactsAnalyzer() {
             className="rounded-md border"
           />
           <Button size="lg" className="bg-amber-600 hover:bg-amber-700" onClick={handleAnalyze}>
-            Discover a Horse Fact
+            Get My Personal Horse Fact
           </Button>
         </CardContent>
       </Card>
@@ -138,10 +172,25 @@ function ResultScreen({ result, onReset }: { result: AnalysisResult; onReset: ()
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4">
               <h2 className="text-2xl font-bold text-white mb-2">{result.horseFact.title}</h2>
+              {result.analysis && result.analysis.confidence > 0 && (
+                <div className="flex items-center gap-2 text-white/90 text-sm">
+                  <Target className="w-4 h-4" />
+                  <span>{result.analysis.confidence}% match based on your posts</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="p-6">
-            <p className="text-lg text-gray-700 leading-relaxed">{result.horseFact.fact}</p>
+            <p className="text-lg text-gray-700 leading-relaxed mb-4">{result.horseFact.fact}</p>
+
+            {result.analysis && result.analysis.matchedCategories.length > 0 && (
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                <p className="text-sm text-amber-800">
+                  <strong>Why this fact?</strong> Based on your posts about{" "}
+                  {result.analysis.matchedCategories.join(", ")}
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -153,7 +202,7 @@ function ResultScreen({ result, onReset }: { result: AnalysisResult; onReset: ()
           variant="outline"
           className="w-full text-amber-700 border-amber-300 hover:bg-amber-50 bg-transparent"
         >
-          Discover Another Fact
+          Analyze Again
         </Button>
       </div>
     </div>
