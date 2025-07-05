@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Define custom fonts using @font-face */
+@font-face {
+  font-family: "Quicksand-VariableFont_wght";
+  src: url("/Quicksand-VariableFont_wght.woff") format("woff");
+  font-weight: 300 700; /* Variable font weight range */
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Matemasie-Regular";
+  src: url("/Matemasie-Regular.woff") format("woff");
+  font-weight: 400; /* Assuming regular weight for Matemasie */
+  font-display: swap;
+}
+
+:root {
+  --foreground-rgb: 30, 58, 138;
+  --background-start-rgb: 239, 246, 255;
+  --background-end-rgb: 255, 255, 255;
+  --blue-primary: 37, 99, 235;
+  --blue-secondary: 59, 130, 246;
+}
+
+@layer base {
+  body {
+    @apply font-body text-black; /* Default text color */
+    /* Ensure no conflicting background styles here */
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  /* Use CSS variables for fonts */
+  font-family: var(--font-kalam), cursive, system-ui, sans-serif;
+  background: linear-gradient(135deg, rgb(var(--background-start-rgb)) 0%, rgb(var(--background-end-rgb)) 100%);
+}
+
+h1,
+h2,
+h3 {
+  /* Use CSS variables for fonts */
+  font-family: var(--font-caveat), cursive, system-ui, sans-serif;
+  font-weight: 700;
+}
+
+/* Custom blue scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eff6ff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+/* Keep existing utilities like text outlines, etc. */
+@layer utilities {
+  .text-ppg-title {
+    color: white;
+    -webkit-text-stroke: 3px black;
+    text-stroke: 3px black;
+    paint-order: stroke fill;
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+  }
+
+  .text-ppg-button-dark {
+    color: black;
+    -webkit-text-stroke: 2px white;
+    text-stroke: 2px white;
+    paint-order: stroke fill;
+  }
+
+  .text-ppg-button-light {
+    color: white;
+    -webkit-text-stroke: 2px black;
+    text-stroke: 2px black;
+    paint-order: stroke fill;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .blue-shadow {
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
+  }
+
+  /* Custom text outline for PowerPuff style */
+  .text-ppg-outline {
+    color: white; /* Text color */
+    -webkit-text-stroke: 2px black; /* For Webkit browsers */
+    text-stroke: 2px black; /* Standard */
+    paint-order: stroke fill; /* Ensures stroke is behind fill */
+    /* Fallback for browsers that don't support -webkit-text-stroke or text-stroke */
+    text-shadow: -2px -2px 0 black, 2px -2px 0 black, -2px 2px 0 black, 2px 2px 0 black, -2px 0 0 black, 2px 0 0 black,
+      0 -2px 0 black, 0 2px 0 black;
+  }
+
+  /* Specific for the "Analyze My Posts!" button which has black text with white outline */
+  .text-ppg-outline-analyze {
+    color: black; /* Text color */
+    -webkit-text-stroke: 2px white; /* For Webkit browsers */
+    text-stroke: 2px white; /* Standard */
+    paint-order: stroke fill; /* Ensures stroke is behind fill */
+    text-shadow: -2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white, -2px 3px 0 white, -2px 0 0 white, 2px 0 0 white,
+      0 -2px 0 white, 0 2px 0 white;
+  }
+}
