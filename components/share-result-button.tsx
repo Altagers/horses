@@ -22,7 +22,7 @@ export function ShareResultButton({ horseFact, onReset }: ShareResultButtonProps
     setErrorMessage(null)
 
     // Construct the URL for the shareable HTML page
-    const sharePageUrl = new URL(`/s/${encodeURIComponent(horseFact.id)}`, appBaseUrl).toString()
+    const sharePageUrl = new URL(`/s/${horseFact.id}`, appBaseUrl).toString()
 
     const castText = `🐴 Amazing Horse Fact: ${horseFact.fact.substring(0, 100)}${horseFact.fact.length > 100 ? "..." : ""} Discover more horse facts!`
 

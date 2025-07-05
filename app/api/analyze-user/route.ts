@@ -50,7 +50,9 @@ export async function POST(request: NextRequest) {
     if (castTexts.length === 0) {
       console.log(`Backend: No casts found for FID ${fid}. Defaulting to Bubbles.`)
       // If no casts, default to Bubbles (or handle as preferred)
-      return NextResponse.json({ character: characters.bubbles })
+      const horseFact = getRandomHorseFact()
+      console.log(`Backend: Returning horse fact ${horseFact.id} for FID ${fid}`)
+      return NextResponse.json({ character: characters.bubbles, horseFact, success: true })
     }
 
     // 2. Prepare the prompt and call OpenAI API
@@ -106,13 +108,17 @@ Respond with ONLY the character name that best matches the overall pattern. Cons
         `Backend: OpenAI returned an unknown character for FID ${fid}: '${characterName}'. Defaulting to Bubbles.`,
       )
       // Fallback if OpenAI returns an unexpected value
-      return NextResponse.json({ character: characters.bubbles }) // Default to Bubbles
+      const horseFact = getRandomHorseFact()
+      console.log(`Backend: Returning horse fact ${horseFact.id} for FID ${fid}`)
+      return NextResponse.json({ character: characters.bubbles, horseFact, success: true }) // Default to Bubbles
     }
 
     console.log(`Backend: Matched character for FID ${fid}: ${matchedCharacter.name}`)
+    const horseFact = getRandomHorseFact()
+    console.log(`Backend: Returning horse fact ${horseFact.id} for FID ${fid}`)
     return NextResponse.json({
       character: matchedCharacter,
-      horseFact: getRandomHorseFact(),
+      horseFact,
       success: true,
     })
   } catch (error) {

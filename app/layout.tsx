@@ -4,21 +4,21 @@ import "./globals.css"
 import { MiniKitContextProvider } from "@/provider/minikit-provider"
 
 export const metadata: Metadata = {
-  title: "PowerPuff Personality Analyzer",
-  description: "Which Powerpuff Girl Are You? Analyze your Farcaster posts to find out!",
+  title: "Horse Facts & Pics",
+  description: "Discover amazing horse facts with beautiful pictures! Share fascinating equine knowledge on Farcaster.",
   generator: "v0.dev",
   other: {
     "fc:frame": JSON.stringify({
       version: "next",
-      imageUrl: "https://v0-mini-open-ai.vercel.app/pp_banner.png",
+      imageUrl: "https://v0-powerpuff-girls-9j.vercel.app/banner.png",
       button: {
-        title: "Find your Powerpuff",
+        title: "Discover Horse Facts",
         action: {
           type: "launch_frame",
-          name: "PowerPuff Analyzer",
-          url: "https://v0-mini-open-ai.vercel.app",
-          splashImageUrl: "https://v0-mini-open-ai.vercel.app/pp_banner.png",
-          splashBackgroundColor: "#FFD1DC",
+          name: "Horse Facts & Pics",
+          url: "https://v0-powerpuff-girls-9j.vercel.app",
+          splashImageUrl: "https://v0-powerpuff-girls-9j.vercel.app/splash.png",
+          splashBackgroundColor: "#F4A460",
         },
       },
     }),
@@ -32,7 +32,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-body antialiased">
+      <body className="font-sans antialiased">
         <MiniKitContextProvider>{children}</MiniKitContextProvider>
       </body>
     </html>

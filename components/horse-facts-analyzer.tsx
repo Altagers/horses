@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-
 import { useRouter } from "next/navigation"
 import { useMiniKit } from "@coinbase/onchainkit/minikit"
 import { getRandomHorseFact, type HorseFact } from "@/lib/horse-facts"

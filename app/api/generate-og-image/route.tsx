@@ -1,59 +1,88 @@
 import { ImageResponse } from "next/og"
 import type { NextRequest } from "next/server"
+import { getHorseFactById } from "@/lib/horse-facts"
 
 export const runtime = "edge"
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
-  const factId = searchParams.get("factId") ?? "0"
-  const factImage = searchParams.get("factImage") ?? "/banner.png"
+  try {
+    const { searchParams } = new URL(req.url)
+    const factId = searchParams.get("factId")
+    const factImagePublicPath = searchParams.get("factImage")
 
-  const fontData = await fetch(`${process.env.NEXT_PUBLIC_URL ?? ""}/Matemasie-Regular.woff`).then((res) =>
-    res.arrayBuffer(),
-  )
+    const baseUrl = "https://v0-powerpuff-girls-9j.vercel.app"
 
-  return new ImageResponse(
-    <div
-      style={{
-        width: "1200px",
-        height: "630px",
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "#FAF5E9",
-        fontFamily: "Matemasie",
-      }}
-    >
-      {/* Background image */}
-      <img
-        src={factImage || "/placeholder.svg"}
-        style={{
-          objectFit: "cover",
-          width: "1200px",
-          height: "400px",
-        }}
-      />
+    if (!factId || !factImagePublicPath) {
+      return new Response("Missing fact information", { status: 400 })
+    }
+
+    const horseFact = getHorseFactById(Number.parseInt(factId))
+    if (!horseFact) {
+      return new Response("Horse fact not found", { status: 404 })
+    }
+
+    const factImageUrl = new URL(factImagePublicPath, baseUrl).toString()
+
+    return new ImageResponse(
       <div
         style={{
-          padding: "40px",
+          height: "100%",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
-          gap: "24px",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#8B4513",
+          padding: "40px",
+          border: "8px solid #D2691E",
+          borderRadius: "24px",
         }}
       >
-        <h1 style={{ fontSize: "48px", color: "#4E2602" }}>Amazing Horse Fact #{factId}</h1>
-        <p style={{ fontSize: "32px", color: "#6B3A0B" }}>Find out more at Horse Facts & Pics!</p>
-      </div>
-    </div>,
-    {
-      width: 1200,
-      height: 630,
-      fonts: [
-        {
-          name: "Matemasie",
-          data: fontData,
-          style: "normal",
-        },
-      ],
-    },
-  )
+        <img
+          src={factImageUrl || "/placeholder.svg"}
+          width={400}
+          height={250}
+          style={{
+            borderRadius: "16px",
+            border: "4px solid white",
+            marginBottom: "30px",
+            objectFit: "cover",
+          }}
+          alt={horseFact.title}
+        />
+        <h1
+          style={{
+            fontSize: "48px",
+            fontWeight: "bold",
+            color: "white",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+            margin: "0 0 20px 0",
+            textAlign: "center",
+            lineHeight: 1.2,
+          }}
+        >
+          🐴 {horseFact.title}
+        </h1>
+        <p
+          style={{
+            fontSize: "24px",
+            color: "#F4A460",
+            textAlign: "center",
+            maxWidth: "90%",
+            lineHeight: 1.4,
+            textShadow: "1px 1px 2px rgba(0,0,0,0.6)",
+          }}
+        >
+          {horseFact.fact.length > 120 ? horseFact.fact.substring(0, 120) + "..." : horseFact.fact}
+        </p>
+      </div>,
+      {
+        width: 1200,
+        height: 630,
+      },
+    )
+  } catch (e: any) {
+    console.error(`OG Image Error: Failed to generate ImageResponse:`, e.message)
+    return new Response(`Failed to generate image: ${e.message}`, { status: 500 })
+  }
 }
