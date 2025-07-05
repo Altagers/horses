@@ -1,14 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
+  // Prevent optional pino dependency from breaking the build
+  webpack: (config) => {
+    config.resolve.alias ||= {};
+    config.resolve.alias["pino-pretty"] = false;
+    return config;
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
-}
+};
 
-export default nextConfig
+export default nextConfig;
