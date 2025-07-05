@@ -12,6 +12,8 @@ export async function GET(req: NextRequest) {
 
     const baseUrl = "https://v0-powerpuff-girls-9j.vercel.app"
 
+    console.log("OG Image Generation:", { factId, factImagePublicPath })
+
     if (!factId || !factImagePublicPath) {
       return new Response("Missing fact information", { status: 400 })
     }
@@ -21,7 +23,9 @@ export async function GET(req: NextRequest) {
       return new Response("Horse fact not found", { status: 404 })
     }
 
+    // Создаем полный URL для изображения лошади
     const factImageUrl = `${baseUrl}${factImagePublicPath}`
+    console.log("Generated image URL:", factImageUrl)
 
     return new ImageResponse(
       <div
