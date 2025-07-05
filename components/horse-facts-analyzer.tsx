@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+
+import { useRouter } from "next/navigation"
 import { useMiniKit } from "@coinbase/onchainkit/minikit"
 import { getRandomHorseFact, type HorseFact } from "@/lib/horse-facts"
 import Image from "next/image"
@@ -21,11 +23,13 @@ type AnalysisResult = {
   horseFact: HorseFact
 }
 
-export function HorseFactsAnalyzer() {
+export default function HorseFactsAnalyzer() {
   const { context } = useMiniKit()
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [previewId, setPreviewId] = useState<number | null>(null)
 
   const handleAnalyze = async () => {
     const userFid = context?.user?.fid
@@ -45,13 +49,19 @@ export function HorseFactsAnalyzer() {
       // Simulate analysis with a random horse fact
       await new Promise((resolve) => setTimeout(resolve, 2000))
       const randomFact = getRandomHorseFact()
-      setResult({ horseFact: randomFact })
+      setPreviewId(randomFact.id)
+      // After 1 s navigate to shareable page
+      setTimeout(() => {
+        router.push(`/s/${randomFact.id}`)
+      }, 1000)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unknown error occurred")
     } finally {
       setLoading(false)
     }
   }
+
+  const previewSrc = previewId ? `/${previewId}.png` : "/banner.png"
 
   if (result) {
     return <ResultScreen result={result} onReset={() => setResult(null)} />
@@ -95,6 +105,20 @@ export function HorseFactsAnalyzer() {
           </CardContent>
         </Card>
       )}
+      <Card className="w-full max-w-lg mt-6">
+        <CardContent className="p-6 flex flex-col items-center gap-6">
+          <Image
+            src={previewSrc || "/placeholder.svg"}
+            alt="Horse fact preview"
+            width={400}
+            height={225}
+            className="rounded-md border"
+          />
+          <Button size="lg" className="bg-amber-600 hover:bg-amber-700" onClick={handleAnalyze}>
+            Discover a Horse Fact
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }

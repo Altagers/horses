@@ -1,81 +1,85 @@
-// Horse facts and corresponding images
+/**
+ * Library of horse facts + helpers
+ */
+
 export interface HorseFact {
+  /** 1-based id that matches /public/{id}.png */
   id: number
-  fact: string
-  image: string
+  /** Short headline used in cards & OG titles */
   title: string
+  /** Full sentence/paragraph fact text */
+  fact: string
+  /** Public image path for the fact (e.g. "/1.png") */
+  image: string
 }
 
 export const horseFacts: HorseFact[] = [
   {
     id: 1,
+    title: "Horses breathe only through their nostrils",
     fact: "Horses cannot breathe through their mouths—only through their nostrils.",
     image: "/1.png",
-    title: "Breathing Facts",
   },
   {
     id: 2,
+    title: "Almost 360-degree vision",
     fact: "Their eyes are located on the sides of their heads, providing almost 360-degree vision, but there are blind spots in front and behind them.",
     image: "/2.png",
-    title: "Vision Facts",
   },
   {
     id: 3,
+    title: "Largest eyes of land mammals",
     fact: "Horses have the largest eyes of any land mammal.",
     image: "/3.png",
-    title: "Eye Facts",
   },
   {
     id: 4,
-    fact: "They can sleep standing up thanks to a 'locking mechanism' in their joints, but they need to lie down for deep sleep.",
+    title: "Sleep standing up",
+    fact: "They can sleep standing up thanks to a locking mechanism in their joints, but they need to lie down for deep sleep.",
     image: "/4.png",
-    title: "Sleep Facts",
   },
   {
     id: 5,
-    fact: "A horse's heart weighs about 4–5 kg and can pump up to 250 liters of blood per minute during intense running.",
+    title: "Powerful heart",
+    fact: "A horse’s heart weighs about 4–5 kg and can pump up to 250 litres of blood per minute during intense running.",
     image: "/5.png",
-    title: "Heart Facts",
   },
   {
     id: 6,
-    fact: "A horse's teeth grow throughout its life, and their wear can be used to determine the horse's age.",
+    title: "Teeth that never stop growing",
+    fact: "A horse’s teeth grow throughout its life, and their wear can be used to determine the horse’s age.",
     image: "/6.png",
-    title: "Teeth Facts",
   },
   {
     id: 7,
+    title: "No gallbladder",
     fact: "Horses do not have a gallbladder, but this does not prevent them from digesting plant food.",
     image: "/7.png",
-    title: "Digestion Facts",
   },
   {
     id: 8,
+    title: "Excellent memory",
     fact: "Horses have excellent memories and can recognize people even after many years.",
     image: "/8.png",
-    title: "Memory Facts",
   },
   {
     id: 9,
+    title: "17+ facial expressions",
     fact: "They use facial expressions to communicate and have more than 17 distinct facial expressions.",
     image: "/9.png",
-    title: "Communication Facts",
   },
   {
     id: 10,
+    title: "Clever problem-solvers",
     fact: "Horses are capable of learning to open doors, unscrew lids, and use simple mechanisms.",
     image: "/10.png",
-    title: "Intelligence Facts",
   },
 ]
 
-// Function to get a random horse fact
-export function getRandomHorseFact(): HorseFact {
-  const randomIndex = Math.floor(Math.random() * horseFacts.length)
-  return horseFacts[randomIndex]
+export function getHorseFactById(id: number): HorseFact | undefined {
+  return horseFacts.find((f) => f.id === id)
 }
 
-// Function to get horse fact by ID
-export function getHorseFactById(id: number): HorseFact | undefined {
-  return horseFacts.find((fact) => fact.id === id)
+export function getRandomHorseFact(): HorseFact {
+  return horseFacts[Math.floor(Math.random() * horseFacts.length)]
 }
