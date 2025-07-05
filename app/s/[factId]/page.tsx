@@ -37,6 +37,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: fact.fact,
       images: [og],
     },
+    other: {
+      "fc:frame": JSON.stringify({
+        version: "next",
+        imageUrl: og,
+        button: {
+          title: `🐴 ${fact.title} - Open Horse Facts!`,
+          action: {
+            type: "launch_frame",
+            name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Horse Facts & Pics",
+            url: baseUrl,
+            splashImageUrl: `${baseUrl}/splash.png`,
+            splashBackgroundColor: "#8B4513",
+          },
+        },
+      }),
+    },
   }
 }
 

@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       return new Response("Horse fact not found", { status: 404 })
     }
 
-    const factImageUrl = new URL(factImagePublicPath, baseUrl).toString()
+    const factImageUrl = `${baseUrl}${factImagePublicPath}`
 
     return new ImageResponse(
       <div
