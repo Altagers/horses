@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { characters } from "@/lib/characters" // Ensure this path is correct
+import { getRandomHorseFact } from "@/lib/horse-facts"
 
 export const maxDuration = 60
 
@@ -11,10 +12,13 @@ export async function POST(request: NextRequest) {
     const fid = body.fid // Get FID from request body
 
     if (!fid) {
-      throw new Error("FID not provided in the request body")
+      return NextResponse.json({ error: "FID is required" }, { status: 400 })
     }
 
     console.log(`Backend: Received request to analyze FID: ${fid}`) // Log the FID being queried
+
+    // Simulate analysis delay
+    await new Promise((resolve) => setTimeout(resolve, 1500))
 
     // 1. Fetch user casts from Neynar API
     if (!process.env.NEYNAR_API_KEY) {
@@ -108,13 +112,13 @@ Respond with ONLY the character name that best matches the overall pattern. Cons
     console.log(`Backend: Matched character for FID ${fid}: ${matchedCharacter.name}`)
     return NextResponse.json({
       character: matchedCharacter,
+      horseFact: getRandomHorseFact(),
+      success: true,
     })
   } catch (error) {
     console.error("Backend: Error in analyze-user route:", error)
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Failed to analyze user data",
-      },
+      { error: error instanceof Error ? error.message : "Failed to analyze user data" },
       { status: 500 },
     )
   }

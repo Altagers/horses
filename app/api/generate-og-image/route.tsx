@@ -1,40 +1,27 @@
 import { ImageResponse } from "next/og"
 import type { NextRequest } from "next/server"
-import { characters } from "@/lib/characters"
+import { getHorseFactById } from "@/lib/horse-facts"
 
 export const runtime = "edge"
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const characterName = searchParams.get("characterName")
-    const characterImagePublicPath = searchParams.get("characterImage") // e.g., /bubbles.png
+    const factId = searchParams.get("factId")
+    const factImagePublicPath = searchParams.get("factImage")
 
-    // Hardcode the base URL for reliability
-    const baseUrl = "https://v0-mini-open-ai.vercel.app"
+    const baseUrl = "https://v0-powerpuff-girls-9j.vercel.app"
 
-    if (!characterName || !characterImagePublicPath) {
-      return new Response("Missing character information", { status: 400 })
+    if (!factId || !factImagePublicPath) {
+      return new Response("Missing fact information", { status: 400 })
     }
 
-    // Construct absolute URL for the character image
-    const characterImageUrl = new URL(characterImagePublicPath, baseUrl).toString()
-
-    const characterData = Object.values(characters).find((c) => c.name === characterName)
-    if (!characterData) {
-      return new Response("Character not found", { status: 404 })
+    const horseFact = getHorseFactById(Number.parseInt(factId))
+    if (!horseFact) {
+      return new Response("Horse fact not found", { status: 404 })
     }
 
-    const bgColor =
-      characterData.name === "Bubbles"
-        ? "#73D2F3" // Bubbles Blue
-        : characterData.name === "Blossom"
-          ? "#F283B3" // Blossom Pink
-          : characterData.name === "Buttercup"
-            ? "#A2E5B3" // Buttercup Green
-            : characterData.name === "Mojo Jojo"
-              ? "#C084FC" // Mojo Purple
-              : "#F9A826" // Default Yellow/Orange
+    const factImageUrl = new URL(factImagePublicPath, baseUrl).toString()
 
     return new ImageResponse(
       <div
@@ -45,42 +32,48 @@ export async function GET(req: NextRequest) {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: bgColor,
+          backgroundColor: "#8B4513",
           padding: "40px",
-          border: "10px solid black",
-          borderRadius: "30px",
+          border: "8px solid #D2691E",
+          borderRadius: "24px",
         }}
       >
         <img
-          src={characterImageUrl || "/placeholder.svg"}
-          width={300}
-          height={300}
-          style={{ borderRadius: "50%", border: "8px solid black", marginBottom: "30px" }}
-          alt={characterName}
+          src={factImageUrl || "/placeholder.svg"}
+          width={400}
+          height={250}
+          style={{
+            borderRadius: "16px",
+            border: "4px solid white",
+            marginBottom: "30px",
+            objectFit: "cover",
+          }}
+          alt={horseFact.title}
         />
         <h1
           style={{
-            fontSize: "82px",
+            fontSize: "48px",
             fontWeight: "bold",
             color: "white",
-            textShadow: "4px 4px 0 black, -4px -4px 0 black, 4px -4px 0 black, -4px 4px 0 black",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
             margin: "0 0 20px 0",
             textAlign: "center",
-            lineHeight: 1.1,
+            lineHeight: 1.2,
           }}
         >
-          You are {characterName}! {characterData.emoji}
+          🐴 {horseFact.title}
         </h1>
         <p
           style={{
-            fontSize: "32px",
-            color: "black",
+            fontSize: "24px",
+            color: "#F4A460",
             textAlign: "center",
             maxWidth: "90%",
-            lineHeight: 1.3,
+            lineHeight: 1.4,
+            textShadow: "1px 1px 2px rgba(0,0,0,0.6)",
           }}
         >
-          {characterData.description}
+          {horseFact.fact.length > 120 ? horseFact.fact.substring(0, 120) + "..." : horseFact.fact}
         </p>
       </div>,
       {

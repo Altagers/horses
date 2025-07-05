@@ -2,34 +2,34 @@
 
 import { useState } from "react"
 import { sdk } from "@farcaster/frame-sdk"
-import { PpgButton } from "./ppg-button"
-import type { PowerPuffCharacter } from "@/lib/characters"
+import { Button } from "@/components/ui/button"
+import type { HorseFact } from "@/lib/horse-facts"
+import { Share2 } from "lucide-react"
 
 interface ShareResultButtonProps {
-  character: PowerPuffCharacter
+  horseFact: HorseFact
   onReset: () => void
 }
 
-export function ShareResultButton({ character, onReset }: ShareResultButtonProps) {
+export function ShareResultButton({ horseFact, onReset }: ShareResultButtonProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const appBaseUrl = "https://v0-mini-open-ai.vercel.app" // Hardcoded for reliability
+  const appBaseUrl = "https://v0-powerpuff-girls-9j.vercel.app"
 
   const handleShare = async () => {
     setStatus("loading")
     setErrorMessage(null)
 
     // Construct the URL for the shareable HTML page
-    // Example: https://v0-mini-open-ai.vercel.app/s/Bubbles
-    const sharePageUrl = new URL(`/s/${encodeURIComponent(character.name)}`, appBaseUrl).toString()
+    const sharePageUrl = new URL(`/s/${encodeURIComponent(horseFact.id)}`, appBaseUrl).toString()
 
-    const castText = `I'm ${character.name}! ${character.emoji} Which PowerPuff Girl are you? Find out on PowerPuff Analyzer!`
+    const castText = `🐴 Amazing Horse Fact: ${horseFact.fact.substring(0, 100)}${horseFact.fact.length > 100 ? "..." : ""} Discover more horse facts!`
 
     try {
       await sdk.actions.composeCast({
         text: castText,
-        embeds: [sharePageUrl], // Embed the URL of the HTML page with OG tags
+        embeds: [sharePageUrl],
       })
       setStatus("idle")
     } catch (error) {
@@ -39,26 +39,23 @@ export function ShareResultButton({ character, onReset }: ShareResultButtonProps
     }
   }
 
-  const characterPpgColors: Record<string, "primary" | "bubbles" | "blossom" | "buttercup" | "mojo"> = {
-    Bubbles: "bubbles",
-    Blossom: "blossom",
-    Buttercup: "buttercup",
-    "Mojo Jojo": "mojo",
-  }
-  const buttonVariant = characterPpgColors[character.name] || "primary"
-
   return (
     <div className="w-full flex flex-col items-center gap-4">
-      <PpgButton
+      <Button
         onClick={handleShare}
         disabled={status === "loading"}
-        variant={buttonVariant}
-        className="w-full text-xl"
-        sparkles
+        className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
       >
-        {status === "loading" ? "Preparing Share..." : `Share Your Result!`}
-      </PpgButton>
-      {status === "error" && <p className="text-red-500 font-body mt-2">{errorMessage}</p>}
+        {status === "loading" ? (
+          "Preparing Share..."
+        ) : (
+          <>
+            <Share2 className="w-5 h-5 mr-2" />
+            Share This Horse Fact!
+          </>
+        )}
+      </Button>
+      {status === "error" && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
     </div>
   )
 }
