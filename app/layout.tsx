@@ -7,22 +7,13 @@ export const metadata: Metadata = {
   title: "Horse Facts & Pics",
   description: "Discover amazing horse facts with beautiful pictures! Share fascinating equine knowledge on Farcaster.",
   generator: "v0.dev",
-  other: {
-    "fc:frame": JSON.stringify({
-      version: "next",
-      imageUrl: "https://v0-powerpuff-girls-9j.vercel.app/banner.png",
-      button: {
-        title: "Discover Horse Facts",
-        action: {
-          type: "launch_frame",
-          name: "Horse Facts & Pics",
-          url: "https://v0-powerpuff-girls-9j.vercel.app",
-          splashImageUrl: "https://v0-powerpuff-girls-9j.vercel.app/splash.png",
-          splashBackgroundColor: "#F4A460",
-        },
-      },
-    }),
+  openGraph: {
+    title: "Horse Facts & Pics",
+    description: "Discover amazing horse facts with beautiful pictures!",
+    images: [{ url: "https://v0-powerpuff-girls-9j.vercel.app/banner.png", width: 1200, height: 630 }],
+    type: "website",
   },
+  // Убираем статичную fc:frame метадату - она будет только на динамических страницах фактов
 }
 
 export default function RootLayout({

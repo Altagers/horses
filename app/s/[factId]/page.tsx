@@ -20,7 +20,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_URL || "https://v0-powerpuff-girls-9j.vercel.app"
-  const og = `${baseUrl}/api/generate-og-image?factId=${fact.id}&factImage=${encodeURIComponent(fact.image)}`
+  // Добавляем timestamp для предотвращения кэширования
+  const timestamp = Date.now()
+  const og = `${baseUrl}/api/generate-og-image?factId=${fact.id}&factImage=${encodeURIComponent(fact.image)}&t=${timestamp}`
+
+  console.log("Generating metadata for fact:", fact.id, "OG URL:", og)
 
   return {
     title: `${fact.title} | Horse Facts & Pics`,
