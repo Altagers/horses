@@ -21,21 +21,26 @@ export function ShareResultButton({ horseFact, onReset }: ShareResultButtonProps
     setStatus("loading")
     setErrorMessage(null)
 
-    // Создаем уникальный URL с timestamp для каждого шеринга
+    // Создаем уникальный URL с несколькими параметрами для уникальности
     const timestamp = Date.now()
+    const randomId = Math.random().toString(36).substring(2, 15)
     const sharePageUrl = new URL(`/s/${horseFact.id}`, appBaseUrl)
+
+    // Добавляем множественные параметры для уникальности
     sharePageUrl.searchParams.set("shared", timestamp.toString())
+    sharePageUrl.searchParams.set("sid", randomId)
+    sharePageUrl.searchParams.set("v", "2")
 
     const finalShareUrl = sharePageUrl.toString()
 
     const castText = `🐴 Amazing Horse Fact #${horseFact.id}: ${horseFact.title}! 
-    
-${horseFact.fact.substring(0, 100)}${horseFact.fact.length > 100 ? "..." : ""} 
+
+${horseFact.fact.substring(0, 120)}${horseFact.fact.length > 120 ? "..." : ""} 
 
 Discover more horse facts! 🐎`
 
     try {
-      console.log("Sharing URL:", finalShareUrl)
+      console.log("Sharing unique URL:", finalShareUrl)
 
       await sdk.actions.composeCast({
         text: castText,

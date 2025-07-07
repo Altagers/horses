@@ -26,22 +26,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   console.log("Generating metadata for fact:", fact.id, "OG URL:", ogImageUrl)
 
-  // Правильная структура для Farcaster Frame
-  const frameData = {
-    version: "next",
-    imageUrl: ogImageUrl,
-    button: {
-      title: `🐴 ${fact.title} - Open Horse Facts!`,
-      action: {
-        type: "launch_frame",
-        name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Horse Facts & Pics",
-        url: baseUrl,
-        splashImageUrl: `${baseUrl}/splash.png`,
-        splashBackgroundColor: "#8B4513",
-      },
-    },
-  }
-
   return {
     title: `${fact.title} | Horse Facts & Pics`,
     description: fact.fact,
@@ -59,8 +43,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [ogImageUrl],
     },
     other: {
-      // Правильный формат для Farcaster Frame
-      "fc:frame": JSON.stringify(frameData),
+      // Farcaster Frame метатеги - правильный формат
+      "fc:frame": "vNext",
+      "fc:frame:image": ogImageUrl,
+      "fc:frame:image:aspect_ratio": "1.91:1",
+      "fc:frame:button:1": `🐴 ${fact.title} - Open Horse Facts!`,
+      "fc:frame:button:1:action": "launch_frame",
+      "fc:frame:button:1:target": JSON.stringify({
+        type: "launch_frame",
+        name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Horse Facts & Pics",
+        url: baseUrl,
+        splashImageUrl: `${baseUrl}/splash.png`,
+        splashBackgroundColor: "#8B4513",
+      }),
     },
   }
 }

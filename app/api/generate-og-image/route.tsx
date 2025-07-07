@@ -32,28 +32,33 @@ export async function GET(req: NextRequest) {
     const baseUrl = "https://v0-powerpuff-girls-9j.vercel.app"
     const factImageUrl = `${baseUrl}${factImagePublicPath}`
 
+    // Создаем уникальные элементы для каждого факта
+    const backgroundColors = [
+      "#8B4513",
+      "#A0522D",
+      "#CD853F",
+      "#D2691E",
+      "#B8860B",
+      "#DAA520",
+      "#F4A460",
+      "#DEB887",
+      "#BC8F8F",
+      "#D2B48C",
+    ]
+
+    const emojis = ["🐴", "🐎", "🏇", "🌾", "🥕", "🍎", "⭐", "💫", "🌟", "✨"]
+
+    const bgColor = backgroundColors[horseFact.id % backgroundColors.length]
+    const emoji = emojis[horseFact.id % emojis.length]
+
     console.log("Generating OG image for:", {
       factId: horseFact.id,
       title: horseFact.title,
       imageUrl: factImageUrl,
       timestamp,
+      bgColor,
+      emoji,
     })
-
-    // Создаем уникальный цвет фона для каждого факта
-    const backgroundColors = [
-      "#8B4513", // Saddle Brown
-      "#A0522D", // Sienna
-      "#CD853F", // Peru
-      "#D2691E", // Chocolate
-      "#B8860B", // Dark Goldenrod
-      "#DAA520", // Goldenrod
-      "#F4A460", // Sandy Brown
-      "#DEB887", // Burlywood
-      "#BC8F8F", // Rosy Brown
-      "#D2B48C", // Tan
-    ]
-
-    const bgColor = backgroundColors[horseFact.id % backgroundColors.length]
 
     const response = new ImageResponse(
       <div
@@ -71,7 +76,7 @@ export async function GET(req: NextRequest) {
           position: "relative",
         }}
       >
-        {/* Уникальный элемент для каждого факта */}
+        {/* Уникальный номер факта */}
         <div
           style={{
             position: "absolute",
@@ -79,9 +84,9 @@ export async function GET(req: NextRequest) {
             right: "20px",
             backgroundColor: "#D2691E",
             color: "white",
-            padding: "8px 16px",
-            borderRadius: "20px",
-            fontSize: "18px",
+            padding: "12px 20px",
+            borderRadius: "25px",
+            fontSize: "20px",
             fontWeight: "bold",
             boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
           }}
@@ -89,16 +94,33 @@ export async function GET(req: NextRequest) {
           Fact #{horseFact.id}
         </div>
 
-        {/* Уникальный декоративный элемент */}
+        {/* Уникальный эмодзи для каждого факта */}
         <div
           style={{
             position: "absolute",
             top: "20px",
             left: "20px",
-            fontSize: "32px",
+            fontSize: "40px",
+            transform: `rotate(${(horseFact.id * 15) % 360}deg)`,
           }}
         >
-          🐴
+          {emoji}
+        </div>
+
+        {/* Timestamp для уникальности */}
+        <div
+          style={{
+            position: "absolute",
+            top: "80px",
+            right: "20px",
+            backgroundColor: "rgba(255,255,255,0.2)",
+            color: "white",
+            padding: "4px 8px",
+            borderRadius: "8px",
+            fontSize: "12px",
+          }}
+        >
+          {timestamp}
         </div>
 
         <img
@@ -111,6 +133,7 @@ export async function GET(req: NextRequest) {
             marginBottom: "30px",
             objectFit: "cover",
             boxShadow: "0 8px 16px rgba(0,0,0,0.3)",
+            transform: `rotate(${(horseFact.id % 2 === 0 ? 1 : -1) * 2}deg)`,
           }}
           alt={horseFact.title}
         />
@@ -159,7 +182,7 @@ export async function GET(req: NextRequest) {
             borderRadius: "8px",
           }}
         >
-          Horse Facts & Pics • Unique ID: {timestamp}
+          Horse Facts & Pics • ID: {horseFact.id} • {new Date(Number(timestamp) || Date.now()).toLocaleTimeString()}
         </div>
       </div>,
       {
@@ -168,10 +191,11 @@ export async function GET(req: NextRequest) {
       },
     )
 
-    // Правильные заголовки кэширования для динамических изображений
-    response.headers.set("Cache-Control", "public, immutable, no-transform, max-age=300")
-    response.headers.set("Vary", "Accept")
-    response.headers.set("Content-Type", "image/png")
+    // Заголовки для предотвращения кэширования
+    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate")
+    response.headers.set("Pragma", "no-cache")
+    response.headers.set("Expires", "0")
+    response.headers.set("Vary", "*")
 
     return response
   } catch (e: any) {
