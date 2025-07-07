@@ -21,15 +21,25 @@ export function ShareResultButton({ horseFact, onReset }: ShareResultButtonProps
     setStatus("loading")
     setErrorMessage(null)
 
-    // Construct the URL for the shareable HTML page
-    const sharePageUrl = new URL(`/s/${horseFact.id}`, appBaseUrl).toString()
+    // Создаем уникальный URL с timestamp для каждого шеринга
+    const timestamp = Date.now()
+    const sharePageUrl = new URL(`/s/${horseFact.id}`, appBaseUrl)
+    sharePageUrl.searchParams.set("shared", timestamp.toString())
 
-    const castText = `🐴 Amazing Horse Fact: ${horseFact.fact.substring(0, 100)}${horseFact.fact.length > 100 ? "..." : ""} Discover more horse facts!`
+    const finalShareUrl = sharePageUrl.toString()
+
+    const castText = `🐴 Amazing Horse Fact #${horseFact.id}: ${horseFact.title}! 
+    
+${horseFact.fact.substring(0, 100)}${horseFact.fact.length > 100 ? "..." : ""} 
+
+Discover more horse facts! 🐎`
 
     try {
+      console.log("Sharing URL:", finalShareUrl)
+
       await sdk.actions.composeCast({
         text: castText,
-        embeds: [sharePageUrl],
+        embeds: [finalShareUrl],
       })
       setStatus("idle")
     } catch (error) {
@@ -44,7 +54,7 @@ export function ShareResultButton({ horseFact, onReset }: ShareResultButtonProps
       <Button
         onClick={handleShare}
         disabled={status === "loading"}
-        className="w-full text-lg py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
+        className="w-full text-lg py-6 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
       >
         {status === "loading" ? (
           "Preparing Share..."

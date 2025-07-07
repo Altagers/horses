@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const factId = searchParams.get("factId")
     const factImagePublicPath = searchParams.get("factImage")
-    const timestamp = searchParams.get("t") // Для уникальности
+    const timestamp = searchParams.get("t")
 
     console.log("OG Image Generation Request:", {
       factId,
@@ -39,6 +39,22 @@ export async function GET(req: NextRequest) {
       timestamp,
     })
 
+    // Создаем уникальный цвет фона для каждого факта
+    const backgroundColors = [
+      "#8B4513", // Saddle Brown
+      "#A0522D", // Sienna
+      "#CD853F", // Peru
+      "#D2691E", // Chocolate
+      "#B8860B", // Dark Goldenrod
+      "#DAA520", // Goldenrod
+      "#F4A460", // Sandy Brown
+      "#DEB887", // Burlywood
+      "#BC8F8F", // Rosy Brown
+      "#D2B48C", // Tan
+    ]
+
+    const bgColor = backgroundColors[horseFact.id % backgroundColors.length]
+
     const response = new ImageResponse(
       <div
         style={{
@@ -48,7 +64,7 @@ export async function GET(req: NextRequest) {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#8B4513",
+          backgroundColor: bgColor,
           padding: "40px",
           border: "8px solid #D2691E",
           borderRadius: "24px",
@@ -67,9 +83,22 @@ export async function GET(req: NextRequest) {
             borderRadius: "20px",
             fontSize: "18px",
             fontWeight: "bold",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
           }}
         >
           Fact #{horseFact.id}
+        </div>
+
+        {/* Уникальный декоративный элемент */}
+        <div
+          style={{
+            position: "absolute",
+            top: "20px",
+            left: "20px",
+            fontSize: "32px",
+          }}
+        >
+          🐴
         </div>
 
         <img
@@ -81,6 +110,7 @@ export async function GET(req: NextRequest) {
             border: "4px solid white",
             marginBottom: "30px",
             objectFit: "cover",
+            boxShadow: "0 8px 16px rgba(0,0,0,0.3)",
           }}
           alt={horseFact.title}
         />
@@ -90,13 +120,13 @@ export async function GET(req: NextRequest) {
             fontSize: "48px",
             fontWeight: "bold",
             color: "white",
-            textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+            textShadow: "3px 3px 6px rgba(0,0,0,0.8)",
             margin: "0 0 20px 0",
             textAlign: "center",
             lineHeight: 1.2,
           }}
         >
-          🐴 {horseFact.title}
+          {horseFact.title}
         </h1>
 
         <p
@@ -106,10 +136,13 @@ export async function GET(req: NextRequest) {
             textAlign: "center",
             maxWidth: "90%",
             lineHeight: 1.4,
-            textShadow: "1px 1px 2px rgba(0,0,0,0.6)",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.6)",
+            backgroundColor: "rgba(0,0,0,0.2)",
+            padding: "16px",
+            borderRadius: "12px",
           }}
         >
-          {horseFact.fact.length > 120 ? horseFact.fact.substring(0, 120) + "..." : horseFact.fact}
+          {horseFact.fact.length > 100 ? horseFact.fact.substring(0, 100) + "..." : horseFact.fact}
         </p>
 
         <div
@@ -121,9 +154,12 @@ export async function GET(req: NextRequest) {
             textAlign: "center",
             fontSize: "16px",
             color: "rgba(255,255,255,0.8)",
+            backgroundColor: "rgba(0,0,0,0.3)",
+            padding: "8px",
+            borderRadius: "8px",
           }}
         >
-          Horse Facts & Pics • {timestamp ? new Date(Number(timestamp)).toLocaleString() : "Now"}
+          Horse Facts & Pics • Unique ID: {timestamp}
         </div>
       </div>,
       {
@@ -132,11 +168,10 @@ export async function GET(req: NextRequest) {
       },
     )
 
-    // Добавляем заголовки для предотвращения кэширования
-    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate")
-    response.headers.set("Pragma", "no-cache")
-    response.headers.set("Expires", "0")
-    response.headers.set("Vary", "*")
+    // Правильные заголовки кэширования для динамических изображений
+    response.headers.set("Cache-Control", "public, immutable, no-transform, max-age=300")
+    response.headers.set("Vary", "Accept")
+    response.headers.set("Content-Type", "image/png")
 
     return response
   } catch (e: any) {
