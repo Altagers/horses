@@ -9,12 +9,16 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const factId = searchParams.get("factId")
     const factImagePublicPath = searchParams.get("factImage")
-    const timestamp = searchParams.get("t")
+    const timestamp = searchParams.get("t") || Date.now().toString()
+    const sessionId = searchParams.get("sid") || "default"
+    const version = searchParams.get("v") || "1"
 
     console.log("OG Image Generation Request:", {
       factId,
       factImagePublicPath,
       timestamp,
+      sessionId,
+      version,
       url: req.url,
     })
 
@@ -29,35 +33,36 @@ export async function GET(req: NextRequest) {
       return new Response("Horse fact not found", { status: 404 })
     }
 
-    const baseUrl = "https://v0-powerpuff-girls-9j.vercel.app"
+    const baseUrl = process.env.NEXT_PUBLIC_URL || "https://v0-powerpuff-girls-9j.vercel.app"
     const factImageUrl = `${baseUrl}${factImagePublicPath}`
 
-    // Создаем уникальные элементы для каждого факта
+    // Создаем уникальные элементы для каждого факта и каждого шеринга
     const backgroundColors = [
-      "#8B4513",
-      "#A0522D",
-      "#CD853F",
-      "#D2691E",
-      "#B8860B",
-      "#DAA520",
-      "#F4A460",
-      "#DEB887",
-      "#BC8F8F",
-      "#D2B48C",
+      "#8B4513", "#A0522D", "#CD853F", "#D2691E", "#B8860B",
+      "#DAA520", "#F4A460", "#DEB887", "#BC8F8F", "#D2B48C",
     ]
 
     const emojis = ["🐴", "🐎", "🏇", "🌾", "🥕", "🍎", "⭐", "💫", "🌟", "✨"]
+    const patterns = ["🔥", "💎", "🌟", "⚡", "🎯", "🚀", "💪", "🎨", "🎭", "🎪"]
 
     const bgColor = backgroundColors[horseFact.id % backgroundColors.length]
     const emoji = emojis[horseFact.id % emojis.length]
+    const pattern = patterns[horseFact.id % patterns.length]
+
+    // Используем timestamp и sessionId для создания уникальных элементов
+    const uniqueRotation = (Number(timestamp) % 360)
+    const uniqueScale = 0.8 + (Number(sessionId.charCodeAt(0)) % 40) / 100
 
     console.log("Generating OG image for:", {
       factId: horseFact.id,
       title: horseFact.title,
       imageUrl: factImageUrl,
       timestamp,
+      sessionId,
       bgColor,
       emoji,
+      uniqueRotation,
+      uniqueScale,
     })
 
     const response = new ImageResponse(
@@ -74,9 +79,10 @@ export async function GET(req: NextRequest) {
           border: "8px solid #D2691E",
           borderRadius: "24px",
           position: "relative",
+          backgroundImage: `radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%)`,
         }}
       >
-        {/* Уникальный номер факта */}
+        {/* Уникальный номер факта с timestamp */}
         <div
           style={{
             position: "absolute",
@@ -89,25 +95,40 @@ export async function GET(req: NextRequest) {
             fontSize: "20px",
             fontWeight: "bold",
             boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
+            transform: `rotate(${uniqueRotation * 0.1}deg)`,
           }}
         >
           Fact #{horseFact.id}
         </div>
 
-        {/* Уникальный эмодзи для каждого факта */}
+        {/* Уникальный эмодзи с анимацией */}
         <div
           style={{
             position: "absolute",
             top: "20px",
             left: "20px",
             fontSize: "40px",
-            transform: `rotate(${(horseFact.id * 15) % 360}deg)`,
+            transform: `rotate(${uniqueRotation * 0.2}deg) scale(${uniqueScale})`,
           }}
         >
           {emoji}
         </div>
 
-        {/* Timestamp для уникальности */}
+        {/* Дополнительный паттерн для уникальности */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "20px",
+            left: "20px",
+            fontSize: "30px",
+            opacity: 0.7,
+            transform: `rotate(${-uniqueRotation * 0.15}deg)`,
+          }}
+        >
+          {pattern}
+        </div>
+
+        {/* Timestamp и session ID для уникальности */}
         <div
           style={{
             position: "absolute",
@@ -120,11 +141,11 @@ export async function GET(req: NextRequest) {
             fontSize: "12px",
           }}
         >
-          {timestamp}
+          {new Date(Number(timestamp)).toLocaleTimeString()} • {sessionId.substring(0, 6)}
         </div>
 
         <img
-          src={factImageUrl || "/placeholder.svg"}
+          src={factImageUrl}
           width={400}
           height={250}
           style={{
@@ -133,7 +154,7 @@ export async function GET(req: NextRequest) {
             marginBottom: "30px",
             objectFit: "cover",
             boxShadow: "0 8px 16px rgba(0,0,0,0.3)",
-            transform: `rotate(${(horseFact.id % 2 === 0 ? 1 : -1) * 2}deg)`,
+            transform: `rotate(${(horseFact.id % 2 === 0 ? 1 : -1) * 2}deg) scale(${uniqueScale})`,
           }}
           alt={horseFact.title}
         />
@@ -147,6 +168,7 @@ export async function GET(req: NextRequest) {
             margin: "0 0 20px 0",
             textAlign: "center",
             lineHeight: 1.2,
+            transform: `rotate(${uniqueRotation * 0.05}deg)`,
           }}
         >
           {horseFact.title}
@@ -172,7 +194,6 @@ export async function GET(req: NextRequest) {
           style={{
             position: "absolute",
             bottom: "20px",
-            left: "20px",
             right: "20px",
             textAlign: "center",
             fontSize: "16px",
@@ -182,7 +203,7 @@ export async function GET(req: NextRequest) {
             borderRadius: "8px",
           }}
         >
-          Horse Facts & Pics • ID: {horseFact.id} • {new Date(Number(timestamp) || Date.now()).toLocaleTimeString()}
+          Horse Facts & Pics • ID: {horseFact.id} • v{version}
         </div>
       </div>,
       {
@@ -191,11 +212,12 @@ export async function GET(req: NextRequest) {
       },
     )
 
-    // Заголовки для предотвращения кэширования
-    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate")
+    // Критически важные заголовки для предотвращения кэширования
+    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
     response.headers.set("Pragma", "no-cache")
     response.headers.set("Expires", "0")
     response.headers.set("Vary", "*")
+    response.headers.set("ETag", `"${timestamp}-${sessionId}-${version}"`)
 
     return response
   } catch (e: any) {

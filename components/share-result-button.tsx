@@ -15,21 +15,21 @@ export function ShareResultButton({ horseFact, onReset }: ShareResultButtonProps
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const appBaseUrl = "https://v0-powerpuff-girls-9j.vercel.app"
+  const appBaseUrl = process.env.NEXT_PUBLIC_URL || "https://v0-powerpuff-girls-9j.vercel.app"
 
   const handleShare = async () => {
     setStatus("loading")
     setErrorMessage(null)
 
-    // Создаем уникальный URL с несколькими параметрами для уникальности
+    // Создаем уникальный URL с timestamp и random ID для предотвращения кэширования
     const timestamp = Date.now()
     const randomId = Math.random().toString(36).substring(2, 15)
     const sharePageUrl = new URL(`/s/${horseFact.id}`, appBaseUrl)
 
-    // Добавляем множественные параметры для уникальности
+    // Добавляем параметры для уникальности
     sharePageUrl.searchParams.set("shared", timestamp.toString())
     sharePageUrl.searchParams.set("sid", randomId)
-    sharePageUrl.searchParams.set("v", "2")
+    sharePageUrl.searchParams.set("v", "3") // Увеличиваем версию
 
     const finalShareUrl = sharePageUrl.toString()
 

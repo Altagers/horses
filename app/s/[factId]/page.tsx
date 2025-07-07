@@ -6,9 +6,10 @@ import HorseFactClientPage from "./HorseFactClientPage"
 
 type Props = {
   params: { factId: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const factId = Number(params.factId)
   const fact = getHorseFactById(factId)
 
@@ -20,9 +21,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_URL || "https://v0-powerpuff-girls-9j.vercel.app"
-  // Создаем уникальный URL для каждого факта с timestamp
-  const timestamp = Date.now()
-  const ogImageUrl = `${baseUrl}/api/generate-og-image?factId=${fact.id}&factImage=${encodeURIComponent(fact.image)}&t=${timestamp}`
+  
+  // Создаем уникальные параметры для каждого шеринга
+  const timestamp = searchParams.shared || Date.now()
+  const sessionId = searchParams.sid || Math.random().toString(36).substring(2, 15)
+  const version = searchParams.v || "3"
+  
+  // Создаем уникальный URL для OG изображения с множественными параметрами
+  const ogImageUrl = `${baseUrl}/api/generate-og-image?factId=${fact.id}&factImage=${encodeURIComponent(fact.image)}&t=${timestamp}&sid=${sessionId}&v=${version}&_=${Date.now()}`
 
   console.log("Generating metadata for fact:", fact.id, "OG URL:", ogImageUrl)
 
@@ -32,7 +38,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: fact.title,
       description: fact.fact,
-      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: fact.title }],
+      images: [{ 
+        url: ogImageUrl, 
+        width: 1200, 
+        height: 630, 
+        alt: fact.title 
+      }],
       type: "article",
       url: `${baseUrl}/s/${fact.id}`,
     },
@@ -60,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function HorseFactPage({ params }: Props) {
+export default function HorseFactPage({ params }: { params: { factId: string } }) {
   const factId = Number(params.factId)
   const fact = getHorseFactById(factId)
 
